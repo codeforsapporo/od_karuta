@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<script
+  src="https://code.jquery.com/jquery-3.1.1.min.js"
+  integrity="sha256-hVVnYaiADRTO2PzUGmuLJr8BLUSjGIZsDYGmIJLv2b8="
+  crossorigin="anonymous"></script>
+<script>
+function swapImg() {
+	var num = Math.floor( Math.random() * 46 ) + 1 ;
+	var numStr = ('00' + num).slice(-2);
+	$('#karuta').attr('src', 'images/od_karuta_' + numStr + '.png');
+}
+$(function() {
+	swapImg();
+	$('#karuta').click(swapImg);
+});
+</script>
+</head>
+<body>
+<img  id="karuta" />
+</body>
+</html>
