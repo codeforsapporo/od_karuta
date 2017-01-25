@@ -5,19 +5,141 @@
   src="https://code.jquery.com/jquery-3.1.1.min.js"
   integrity="sha256-hVVnYaiADRTO2PzUGmuLJr8BLUSjGIZsDYGmIJLv2b8="
   crossorigin="anonymous"></script>
-<script>
-function swapImg() {
-	var num = Math.floor( Math.random() * 46 ) + 1 ;
-	var numStr = ('00' + num).slice(-2);
-	$('#karuta').attr('src', 'images/od_karuta_' + numStr + '.png');
+<style type="text/css">
+.not_used {
+    color: #000;
 }
+.used {
+    color: #BBB;
+}
+.now_card {
+    color: #F00;
+    font-weight: bold;
+}
+</style>
+<script>
+
+// 手札とファイル名に使うインデックスのハッシュ
+var cardHash = {
+    '01': 'あ', '02': 'い', '03': 'う', '04': 'え', '05': 'お',
+    '06': 'か', '07': 'き', '08': 'く', '09': 'け', '10': 'こ',
+    '11': 'さ', '12': 'し', '13': 'す', '14': 'せ', '15': 'そ',
+    '16': 'た', '17': 'ち', '18': 'つ', '19': 'て', '20': 'と',
+    '21': 'な', '22': 'に', '23': 'ぬ', '24': 'ね', '25': 'の',
+    '26': 'は', '27': 'ひ', '28': 'ふ', '29': 'へ', '30': 'ほ',
+    '31': 'ま', '32': 'み', '33': 'む', '34': 'め', '35': 'も',
+    '36': 'や', '37': 'ゆ', '38': 'よ',
+    '39': 'ら', '40': 'り', '41': 'る', '42': 'れ', '43': 'ろ',
+    '44': 'わ', '45': 'を', '46': 'ん',
+};
+
+// 1ゲームで配られる札山を管理する
+var fudaYama = [];
+
+/**
+ * 手札をランダムに並び替えを行なったオブジェクト配列を生成する
+ */
+function swapImg() {
+    // 手札のインデックスのみを管理する配列を生成
+    var idxAry = [];
+    for(idx in cardHash) {
+        idxAry.push(idx);
+    }
+
+    // Fisher-Yatesアルゴリズムでランダムに並び替え
+    var n = idxAry.length;
+    for(var i = (n-1); i > 0; i--) {
+        var r = Math.floor(Math.random() * (i+1));
+        var tmp = idxAry[i];
+        idxAry[i] = idxAry[r];
+        idxAry[r] = tmp;
+    }
+
+    // 戻り値の生成
+    retList = [];
+    for(var i = 0; i < idxAry.length; i++) {
+        obj = {};
+        obj['idx']  = idxAry[i];
+        obj['char'] = cardHash[idxAry[i]];
+        retList.push(obj);
+    }
+    return retList;
+}
+
+/**
+ * 出された札の情報を表示
+ */
+function outputUsedCardInfo(fudaYama, nowIdx) {
+    // 「あ」〜「ん」までの一覧を配列で管理
+    var cardCharList = [
+        'あ', 'い', 'う', 'え', 'お',
+        'か', 'き', 'く', 'け', 'こ',
+        'さ', 'し', 'す', 'せ', 'そ',
+        'た', 'ち', 'つ', 'て', 'と',
+        'な', 'に', 'ぬ', 'ね', 'の',
+        'は', 'ひ', 'ふ', 'へ', 'ほ',
+        'ま', 'み', 'む', 'め', 'も',
+        'や', 'ゆ', 'よ',
+        'ら', 'り', 'る', 'れ', 'ろ',
+        'わ', 'を', 'ん'
+    ];
+
+    // 出された札の出力場所を空にする
+    $('#usedCardInfo').empty();
+
+    // 出力処理
+    for(var i = 0; i < cardCharList.length; i++) {
+        var used_flag = false;
+        var span = $('<span>').text(cardCharList[i]);
+
+        // 文字を利用済みにするかどうか判断する
+        for(var j = 0; j <= nowIdx; j++) {
+            var obj  = fudaYama[j];
+            if(obj.char == cardCharList[i]) {
+                used_flag = true;
+                break;
+            }
+        }
+        if(used_flag) {
+            if(cardCharList[i] == fudaYama[nowIdx].char) {
+                span.addClass('now_card');
+            } else {
+                span.addClass('used');
+            }
+        } else {
+            span.addClass('not_used');
+        }
+        $('#usedCardInfo').append(span);
+    }
+    return;
+}
+
 $(function() {
-	swapImg();
-	$('#karuta').click(swapImg);
+    // これから出される手札をランダムに並び替えて札山を生成
+    fudaYama = swapImg();
+
+    // 札山から1枚引っ張って表示
+    var numStr = fudaYama[0].idx;
+    $('#karuta').attr('src', 'images/od_karuta_' + numStr + '.png');
+    outputUsedCardInfo(fudaYama, 0);
+
+    // 札をクリックするたびに札山から札を取る
+    var idx = 1;
+    $('#karuta').click(function(){
+        if(idx == (fudaYama.length)) {
+            alert('ゲーム終了です。再戦するにはリロードしてください。');
+            return;
+        }
+        var numStr = fudaYama[idx].idx;
+        $('#karuta').attr('src', 'images/od_karuta_' + numStr + '.png');
+        outputUsedCardInfo(fudaYama, idx);
+        idx++;
+    });
 });
 </script>
 </head>
 <body>
-<img  id="karuta" />
+    <img  id="karuta" />
+    <div id="usedCardInfo"></div>
 </body>
 </html>
